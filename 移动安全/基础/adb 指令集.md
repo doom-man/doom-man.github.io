@@ -23,3 +23,13 @@ tasklist /fi "PID eq 87568"
 ```
 taskkill /pid 87568 /f
 ```
+## 指令
+1. 查看系统软件包
+```
+adb shell pm list packages
+```
+2. 软件包地址
+```
+adb shell pm path com.jnmo.emp.jjgame
+```
+

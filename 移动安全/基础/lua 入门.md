@@ -1,15 +1,10 @@
 # 环境搭建
 ## 下载编译源码
 ```
-wget http://www.lua.org/ftp/lua-5.3.5.tar.gz
-tar -zvf 
-make linux test
-
-报错fetal error readline ... 啥的确实附加库
 apt-get install lua5.2 lua5.2-doc
 ```
 end
-## 函数
+### 函数
 ```
 luaL_loadbuffer
 载入并编译内存中的一段lua代码，然后作为一个代码块(称为chunk)压入栈中，其中最后一个参数作为代码 块的名称用于调试。
@@ -77,3 +72,18 @@ lua_close(L);
 return 0;
 }
 ```
+## lua、luac、luaJIT三种文件的关系
+在学习lua手游过程中，本人遇到的lua文件大部分是这3种。其中lua是明文代码，直接用记事本就能打开，luac是lua编译后的字节码，文件头为0x1B 0x4C 0x75 0x61 0x51，lua虚拟机能够直接解析lua和luac脚本文件，而luaJIT是另一个lua的实现版本（不是原作者写的），JIT是指Just-In-Time（即时解析运行），luaJIT相比lua和luac更加高效，文件头是0x1B 0x4C 0x4A。
+luac:
+```
+1B 4C 75 61   .LuaQ
+```
+luajit:
+```
+1B 4C 4A .LJ
+```
+
+
+
+> reference 
+> https://bbs.pediy.com/thread-216969.htm
