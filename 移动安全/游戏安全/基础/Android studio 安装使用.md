@@ -33,3 +33,21 @@ NDK_MODULE_PATH  := $(NDK_MODULE_PATH):$(VA_ROOT)
 ```
 因为下载的ndk版本为20，可以修改APP_STL:=c++_static ,修改以后语法会错误。还是下载老版本更是在。
 
+
+
+# couldn't find "*.so"
+	在gradle.properties 文件增加
+```
+android.useDeprecatedNdk=true
+```
+	同级目录build.gradle中
+```
+android {
+	defaultConfig {
+		ndk {
+			abiFilters "armeabi-v7a" , "x86" //, "armeabi"  按需设置
+		}
+	}
+}
+```
+
