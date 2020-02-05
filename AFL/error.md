@@ -18,6 +18,15 @@ echo core >/proc/sys/kernel/core_pattern
          Location : check_cpu_governor(), afl-fuzz.c:7378
 ```
 
+```
+cd /sys/devices/system/cpu echo performance | tee cpu*/cpufreq/scaling_governor
+
+```
+
+
+
+
+
 # 3
 
 ```
