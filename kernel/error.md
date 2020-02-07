@@ -20,3 +20,9 @@ apt-get install libssl-dev
 yum install openssl-dev1
 ```
 
+
+
+# undefined referenceto `__ilog2_NaN`
+
+[link](blog.csdn.net/wlj1012/article/details/81626669)
+
