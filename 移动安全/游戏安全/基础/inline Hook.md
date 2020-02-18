@@ -48,4 +48,6 @@ enum ele7en_status inlineHook(uint32_t target_addr)
 ```
 static void doInlineHook(struct inlineHookItem *item)
 ```
-1. 使用
+1. 使用mprotect() 修改动态链接库地址权限可读可写可执行。
+2. 将proto_addr (注册函数时第三个参数) 指向目标函数指令
+3. 修复目标地址为可执行 
