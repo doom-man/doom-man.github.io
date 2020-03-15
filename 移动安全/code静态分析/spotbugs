@@ -1,0 +1,16 @@
+# SPOTBUG
+
+# 要求
+
+1. java 1.8 或更新
+2. 可运行在Windows ，unix ， macOX
+3. 至少512MB的内存空间去运行soptbug
+
+# 支持的java版本
+
+spotbug 可以扫描JDK8 和更新的版本，但是java11和更新版本还在试验中，spotbug 不支持10,9,7 或更低版本。
+
+
+
+没有找到搭建独立运行的教程，选择了FMD工具来做替代，
+
