@@ -1,4 +1,3 @@
-# android app
 ## AndroidManifext.xml
 AndroidManifest官方解释是应用清单.
 
