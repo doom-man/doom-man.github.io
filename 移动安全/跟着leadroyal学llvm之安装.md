@@ -28,44 +28,14 @@ sudo apt-get install libssl-dev
 ```
 git clone https://github.com/llvm/llvm-project.git
 cd llvm-project
+mv clang llvm/tools/
 mkdir build
 cd build
 cmake -G "Unix MakeFiles" -DCMAKE_BUILD_TYPE=Release ../llvm
-
+make && make install 
 ```
 
 
-
-使用源码来编译安装 https://releases.llvm.org/download.html#7.0.0 ， 下载llvm 和 clang，下载完成后两个文件llvm-7.0.0.src.tar.xz  和 cfe-7.0.0.src.tar.xz   解压并将clang移动到llvm的tools目录下
-
-```
-tar -xf llvm-7.0.0.src.tar.xz
-tar -xf cfe-7.0.0.src.tar.xz
-mv cfe-7.0.0.src.tar.xz clang
-mv clang ./llvm-7.0.0.src.tar.xz/tools
-```
-参照leadroyal的安装方法
-```
-mkdir b
-cd b
-cmake ../llvm-7.0.0.src.tar.xz
-cmake --build . -- -j4
-```
-这是debug版本编译过程可能出memory exhausted 等错误，表示内存不足。debug版本打开需要50g左右空间，没办法换成release 版本。
-```
-cmake llvm-7.0.0.src DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=ON
-cmake --build . --target install 
-```
-这里按照leadroyal安装我出了问题 ，选择了官方的安装方法。这里安装好以后与大佬原文有出入，安装后的可执行文件不在.../i/bin目录下而在..../b/bin下了。
-设置环境变量
-```
-export LLVM_HOME=`pwd`/b
-```
-测试一下,是目标目录就成功了
-
-```
-ls $LLVM_HOME 
-```
 
 # 编译、加载单独的Pass
 
@@ -96,12 +66,15 @@ add_subdirectory(skeleton)  # Use your pass name here.
 使用clang加载so
 
 ```
-$LLVM_HOME/bin/clang -I//home/pareto/llvm-7.0.0.src/include -Xclang -load -Xclang llvm-pass-tutorial/b/skeleton/libSkeletonPass.so -w test.c -o test.bin
+$LLVM_HOME/bin/clang -Xclang -load -Xclang llvm-pass-tutorial/b/skeleton/libSkeletonPass.so -w test.c -o test.bin
 ```
 
 出现错误
 ```
-//home/pareto/llvm-7.0.0.src/include/llvm/Support/Compiler.h:20:10: fatal error: 'new' file not found
+error: unable to load plugin 'llvm-pass-tutorial/b/skeleton/libSkeletonPass.so':
+      'llvm-pass-tutorial/b/skeleton/libSkeletonPass.so: undefined symbol:
+      _ZN4llvm23EnableABIBreakingChecksE'
+
 ```
 
 
@@ -110,3 +83,5 @@ $LLVM_HOME/bin/clang -I//home/pareto/llvm-7.0.0.src/include -Xclang -load -Xclan
 > https://www.leadroyal.cn/?p=645 大佬原文
 > https://www.jianshu.com/p/b08b338d0c62 clang和llvm解释
 > https://releases.llvm.org/7.0.0/docs/GettingStarted.html 官方安装文档
+>
+> https://www.leadroyal.cn/?p=1014 解决_ZN4llvm23EnableABIBreakingChecksE
