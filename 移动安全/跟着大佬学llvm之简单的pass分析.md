@@ -136,8 +136,24 @@ Hello: _GLOBAL__sub_I_helloworld.cpp
 
 ### ImmutablePass 类
 
+这个类提供给哪些不用运行、不用改变状态并且不会更新的pass。这不是转化或分析的常规类型，但是可以提供当前编译配置信息。ImmutablePass 永远不会被无效，也不会无效其他类。
 
+### The ModulePass class
 
+ModulePass 类是所有父类中你可以使用的最通用的类，继承ModulePass 意味着你的pass将整个程序作为单元（而不是随机顺序的函数）或者增加删除删除。因为不知道ModulePass子类的行为，没有优化可以执行过程中完成。
+
+modulepass 可以通过 getAnalysis接口getAnalysis<DominatorTree>(llvm::Function *)函数检索分析结果来使用function level passes。
+#### runOnModule 方法
+
+```
+virtual bool runOnModule(Module &M) = 0;
+```
+
+如果模块被修改返回true，否则false。
+
+### CallGraphSCCPass类
+
+CallGraphSCCPass 可以被用来遍历程序上下文(被调用者调用之前调用)。
 
 
 
