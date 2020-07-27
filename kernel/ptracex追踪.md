@@ -86,12 +86,69 @@ int ptrace_detach(struct task_struct *child, unsigned int data)
 
 已知了其他函数的作用，我们就把重心放在wake_up_process() 上。wake_up_process 调用了try_to_wake_up() 函数过程。
 
+wake_up_process() 调用try_to_wake_up(),try_wake_up() 函数位于[**kernel/sched.c**](https://elixir.bootlin.com/linux/v2.6.0/source/kernel/sched.c#L664)
 
+```
+static int try_to_wake_up(task_t * p, unsigned int state, int sync)
+{
+	unsigned long flags;
+	int success = 0;
+	long old_state;
+	runqueue_t *rq;
 
+repeat_lock_task:
+	//禁止本地中断
+	rq = task_rq_lock(p, &flags);
+	old_state = p->state;
+	if (old_state & state) {
+	//如果p->array字段不等于NULL，那么进程已经属于某个运行队列
+		if (!p->array) {
+			/*
+			 * Fast-migrate the task if it's not running or runnable
+			 * currently. Do not violate hard affinity.
+			 */
+			if (unlikely(sync && !task_running(rq, p) &&
+				(task_cpu(p) != smp_processor_id()) &&
+				cpu_isset(smp_processor_id(), p->cpus_allowed))) {
 
+				set_task_cpu(p, smp_processor_id());
+				task_rq_unlock(rq, &flags);
+				goto repeat_lock_task;
+			}
+			
+			//进程处于不可中断状态。
+			if (old_state == TASK_UNINTERRUPTIBLE){
+				rq->nr_uninterruptible--;
+				/*
+				 * Tasks on involuntary sleep don't earn
+				 * sleep_avg beyond just interactive state.
+				 */
+				p->activated = -1;
+			}
+			if (sync && (task_cpu(p) == smp_processor_id()))
+				__activate_task(p, rq);
+			else {
+				activate_task(p, rq);
+				if (TASK_PREEMPTS_CURR(p, rq))
+					resched_task(rq->curr);
+			}
+			success = 1;
+		}
+		p->state = TASK_RUNNING;
+	}
+	task_rq_unlock(rq, &flags);
+
+	return success;
+}
+```
+
+调试过程中，排除其他函数，定位到resched_task() 函数。
 
 > https://blog.csdn.net/hq815601489/article/details/80009791 Linux系统调用：使用int 0x80
 >
 > https://blog.csdn.net/weixin_33850890/article/details/92823320 Linux系统调用与ptrace分析
 >
 > https://www.ibm.com/developerworks/cn/linux/l-synch/part2/index.html Linux 内核的同步机制
+>
+> http://abcdxyzk.github.io/blog/2015/02/11/kernel-sched-trywakeup/ try_to_wake_up分析
+
