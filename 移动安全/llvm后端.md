@@ -111,7 +111,135 @@ SparcTargetMachine::SparcTargetMachine(const Module &M, const std::string &FS)
 * "p:"后是指针信息：尺寸，ABI alignment，和preferred alignment。如果"p:"后仅有两个数字，那么第一个数字表示指针大写，第二个值表示ABI 和preferred alignment。
 * 然后一个字母用于数字类型对齐："i","f","v" or "a"。"i","v"or”a“后接着ABI对齐和首选(偏好)对齐。"f" 后接三个数字第一个表示long double 的尺寸，ABI对齐和ABI首选对齐。
 
+# 目标寄存器
 
+你必须用TargetRegistry 来注册你的目标，提供其他LLVM工具使用。TargetRegistry可以被直接使用，但是对于绝大多数的目标有辅助模板来帮助你的工作。
 
+所有的目标应该定义一个全局Target对象用来表示注册阶段的对象。然后，在目标的TargetInfo库中，应该定义对象并且用RegisterTarget模板来注册对象。例如，Sparc 注册代码：
 
+```
+Target llvm::getTheSparcTarget();
 
+extern "C" void LLVMInitializeSparcTargetInfo() {
+  RegisterTarget<Triple::sparc, /*HasJIT=*/false>
+    X(getTheSparcTarget(), "sparc", "Sparc");
+}
+```
+
+这样允许TargetRegistry通过名称和三元数组来查找目标。另外，大多数目标还会注册其他功能这样其他单独库也可以使用。这些注册步骤是单独的，因为一些客户端可能希望仅仅链接部分目标，就像JIT代码生成器不要求打印汇编代码，以下有个注册Sparc 汇编打印器的例子:
+
+```
+extern "C" void LLVMInitializeSparcAsmPrinter() {
+  RegisterAsmPrinter<SparcAsmPrinter> X(getTheSparcTarget());
+}
+```
+
+For more information, see “[llvm/Target/TargetRegistry.h](https://llvm.org/doxygen/TargetRegistry_8h-source.html)”.
+
+#  寄存器集和寄存器类
+
+你应该描述一个具备的目标类来表示目标机器的寄存器文件。这个类被叫做XXXRegisterInfo并且表示用来寄存器分配的类寄存器文件数据。也可以被叫做寄存器间的接口。
+
+你也需要去定义一个寄存器类来分类相关寄存器。给一些相同作用的寄存器分配一个类。尤其是整形 、浮点型、矢量寄存器。一个寄存器分配器允许一个指令使用特定寄存器类的所有寄存器来运行指令。寄存器类从集合中分配虚拟寄存器来来使用，并且寄存器类允许目标独立寄存器自动分配选择实际的寄存器。
+
+寄存器类中很多代码 ，包括寄存器定义，寄存器别名和寄存器类 ，都是通过XXXRegisterinfo.td输入文件的TableGen产生并放在XXXGenRegisterInfo.h.inc 和XXXGenRegisterInfo.inc 输出文件。一些在XXXRegister实现的代码要求手写。
+
+# 定义一个寄存器
+
+XXXRegisterInfo.td 文件以一个目标机器寄存器定义开头。寄存器类用来给每个寄存器定义一个对象。指定的字符串n 是寄存器名称。基础的寄存器对象没有任何子类寄存器对象并不会指定别名。
+
+```
+class Register<string n> {
+  string Namespace = "";
+  string AsmName = n;
+  string Name = n;
+  int SpillSize = 0;
+  int SpillAlignment = 0;
+  list<Register> Aliases = [];
+  list<Register> SubRegs = [];
+  list<int> DwarfNumbers = [];
+}
+```
+
+例如，在X86RegisterInfo.td文件，有寄存器定义来使用Regiser类，例如
+
+```
+def AL : Register<"AL">, DwarfRegNum<[0, 0, 0]>;
+```
+
+这定义了AL寄存器并且分配了可以被gdb，gcc 使用的值。对于寄存器AL，DwarfRegNum 使用有三个值的数组表示三个不同的模式：第一个元素对应X86-64,第二个对应X86-32的异常处理，第三个是通用的。-1 是一个特殊的Dwarf数表示gcc number 未定义，-2表示这个模式中寄存器数是无效的。
+
+在之前描述的X86RegisterInfo.td文件，TableGen在X86GenRegisterInfo.inc
+
+TableGen在X86GenRegisterInfo.inc 文件中产生这段代码。
+
+```
+static const unsigned GR8[] = {X86::AL , ...};
+const unsigned AL_AliasSet[] = { X86::AX, X86::EAX, X86::RAX, 0 };
+
+const TargetRegisterDesc RegisterDescriptors[] = {
+  ...
+{ "AL", "AL", AL_AliasSet, Empty_SubRegsSet, Empty_SubRegsSet, AL_SuperRegsSet }, ...
+```
+
+ 从寄存器信息文件，TableGen 产生一个TargetRegisterDesc对象给每个寄存器。TargetRegisterDesc定义在include/llvm/Target/TargetRegisterInfo.h文件下，有这些字段：
+
+```
+struct TargetRegisterDesc {
+  const char     *AsmName;      // Assembly language name for the register
+  const char     *Name;         // Printable name for the reg (for debugging)
+  const unsigned *AliasSet;     // Register Alias Set
+  const unsigned *SubRegs;      // Sub-register set
+  const unsigned *ImmSubRegs;   // Immediate sub-register set
+  const unsigned *SuperRegs;    // Super-register set
+};
+```
+
+TableGen使用整个目标描述文件来决定寄存器的目标名称(AsmName 和TargetRegisterDesc 的Name字段)和与其他寄存器之间的关系(TargetRegisterDesc )，在这个例子中，其他定义建立在寄存器"AX" , "EAX" 和"RAX" 作为另一个的别名，所以TableGen产生了一个NULL结束的数组对应这个寄存器别名集合。
+
+Register类通常用作更复杂类的基类。在Target.td , Register类就是RegisterWithSubRegs的基类，RegisterWithSubRegs用来定义SubRegs列表中需要去指定的寄存器，例如：
+
+```
+class RegisterWithSubRegs<string n, list<Register> subregs> : Register<n> {
+  let SubRegs = subregs;
+}
+```
+
+在SparcRegisterInfo.td ，额外的寄存器类定义给SPARC：一个Register子类，SparcReg，和更多子类：Ri,Rf 和Rd 。SPARC寄存器被5字节长的数据标记，是这些子类常有的特征。记住let 表达式的使用重载了父类最初定义的值。（例如 RD 类中SubRegs字段）。
+
+```
+class SparcReg<string n> : Register<n> {
+  field bits<5> Num;
+  let Namespace = "SP";
+}
+// Ri - 32-bit integer registers
+class Ri<bits<5> num, string n> :
+SparcReg<n> {
+  let Num = num;
+}
+// Rf - 32-bit floating-point registers
+class Rf<bits<5> num, string n> :
+SparcReg<n> {
+  let Num = num;
+}
+// Rd - Slots in the FP register file for 64-bit floating-point values.
+class Rd<bits<5> num, string n, list<Register> subregs> : SparcReg<n> {
+  let Num = num;
+  let SubRegs = subregs;
+}
+```
+
+在SparcRegisterInfo.td文件，有寄存器定义利用这些Register的子类：
+
+```
+def G0 : Ri< 0, "G0">, DwarfRegNum<[0]>;
+def G1 : Ri< 1, "G1">, DwarfRegNum<[1]>;
+...
+def F0 : Rf< 0, "F0">, DwarfRegNum<[32]>;
+def F1 : Rf< 1, "F1">, DwarfRegNum<[33]>;
+...
+def D0 : Rd< 0, "F0", [F0, F1]>, DwarfRegNum<[32]>;
+def D1 : Rd< 2, "F2", [F2, F3]>, DwarfRegNum<[34]>;
+```
+
+最后两个寄存器是双精度浮点寄存器是两个单精度浮点数的子类的别名。除了别名已定义的子寄存器和父寄存器之间的关系位于TargetRegisterDesc字段中

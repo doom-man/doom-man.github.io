@@ -1,8 +1,12 @@
 # 简单的pass分析
 
+[TOC]
+
+
+
 ## pass 实例
 
-上一章节，配置好了clang 和llvm的环境，用了llvm-pass-tutorial来测试环境，这个章节参照官网的教程简单做个翻译。
+上一章节，配置好了clang 和llvm的环境，用了llvm-pass-tutorial来测试环境，这个章节参照github上教程简单做个注释。
 
 GitHub：  https://github.com/banach-space/llvm-tutor 
 
@@ -182,7 +186,7 @@ PreservedAnalyses InjectFuncCall::run(llvm::Module &M,
   return (Changed ? llvm::PreservedAnalyses::none()
                   : llvm::PreservedAnalyses::all());
 }
-
+//legacyInjectFuncCall直接使用InjectFuncCall实例
 bool LegacyInjectFuncCall::runOnModule(llvm::Module &M) {
   bool Changed = Impl.runOnModule(M);
 
@@ -221,7 +225,14 @@ char LegacyInjectFuncCall::ID = 0;
 static RegisterPass<LegacyInjectFuncCall>
     X(/*PassArg=*/"legacy-inject-func-call", /*Name=*/"LegacyInjectFuncCall",
       /*CFGOnly=*/false, /*is_analysis=*/false);
-
+//Register the pass - required for clang
+//这里使用llvm::PassManagerBuilder::EP_EarlyAsPossible会直接崩，llvm::PassManagerBuilder::EP_EnabledOnOptLevel0的意思是-O0 是才会使用。
+static llvm::RegisterStandardPasses
+    Y(llvm::PassManagerBuilder::EP_EnabledOnOptLevel0,
+                          [](const llvm::PassManagerBuilder &Builder,
+                             llvm::legacy::PassManagerBase &PM) {
+                            PM.add(new LegacyInjectFuncCall());
+                          });
 ```
 
 
@@ -284,8 +295,13 @@ namespace {
 
 char Hello2::ID = 0;
 static RegisterPass<Hello2> Y("hello2", "Hello World Pass (with getAnalysisUsage implemented)");
-
 ```
+
+## 程序流程
+
+
+
+## 测试
 
 测试目标test.c
 
@@ -501,11 +517,11 @@ static RegisterPass<LegacyInjectFuncCall>
 
 这个类提供给哪些不用运行、不用改变状态并且不会更新的pass。这不是转化或分析的常规类型，但是可以提供当前编译配置信息。ImmutablePass 永远不会被无效，也不会无效其他类。
 
-### The ModulePass class
+### ModulePass 
 
-ModulePass 类是所有父类中你可以使用的最通用的类，继承ModulePass 意味着你的pass将整个程序作为单元（而不是随机顺序的函数）或者增加删除删除。因为不知道ModulePass子类的行为，没有优化可以执行过程中完成。
+ModulePass 类是所有父类中你可以使用的最通用的类，继承ModulePass 意味着你的pass将整个程序作为单元（而不是随机顺序的函数）或者增加删除删除。因为不知道ModulePass子类的行为，没有优化可以在执行过程中完成。
 
-modulepass 可以通过 getAnalysis接口getAnalysis<DominatorTree>(llvm::Function *)函数检索分析结果来使用function level passes。
+modulepass 可以通过 getAnalysis接口getAnalysis<DominatorTree>(llvm::Function *)函数检索分析结果来使用函数级的passes。
 #### runOnModule 方法
 
 ```
@@ -513,6 +529,21 @@ virtual bool runOnModule(Module &M) = 0;
 ```
 
 如果模块被修改返回true，否则false。
+
+### FunctionPass
+
+和ModulePass相反，FunctionPass 是系统可以预测的行为。所有的FunctionPass在程序的每个函数执行独立于程序中其他的函数。functionPass 不要求他们按照特定顺序执行，也不会修改外部函数。
+
+FunctionPass 不允许做：
+
+1. 检查或修改当前处理函数以外的其他函数。
+2. 从当前模块增加或修改函数。
+3. 从当前模块增加或修改全局变量。
+4. 维护runOnFunction调用之间的状态（包括全局数据）。????目前还不懂什么意思。
+
+（[Hello World 实例](https://llvm.org/docs/WritingAnLLVMPass.html#writing-an-llvm-pass-basiccode)）FunctionPass 可能重载三个虚函数，如果虚函数修改了程序就应该返回true。
+
+
 
 ### CallGraphSCCPass类
 
