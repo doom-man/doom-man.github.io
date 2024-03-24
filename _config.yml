@@ -3,11 +3,11 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Hexo
+title: 巴莱多的博客
 subtitle: ''
 description: ''
 keywords:
-author: John Doe
+author: Pareto
 language: en
 timezone: ''
 
@@ -96,11 +96,12 @@ ignore:
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: landscape
+# theme: landscape
+theme: cactus
 
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: git
   repo: https://github.com/doom-man/doom-man.github.io
-  branch: master
+  branch: main
