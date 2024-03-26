@@ -53,7 +53,7 @@ dmesg | grep magiskinit
 
 ## 理解init_boot.img 的作用
 
-[''android对bootloader行为的说明"](https://source.android.com/docs/core/architecture/bootloader )说到 ，bootloader 加载init_boot.img, boot.img 。
+["android对bootloader行为的说明"](https://source.android.com/docs/core/architecture/bootloader )说到 ，bootloader 加载init_boot.img, boot.img 。
 
 1. 将内核加载内存，并且在内存中执行
 2. 加载ramdisks和bootconfig 到内存创建initramfs
@@ -186,7 +186,7 @@ void BaseInit::exec_init() {
 }
 ```
 
-prepare将当前/init 复制到/data/magiskinit ，还原/init为原init ，用注释的话说，重定位/system/bin/init 为/data/magiskinit ，内部实现使用rust，我猜测修改/init程序中 /system/bin/init 字符串为/data/magiskinit。
+prepare将当前/init 复制到/data/magiskinit ，还原/init为原init 。然后重定位/system/bin/init 为/data/magiskinit ，修改/init程序中 /system/bin/init 字符串为/data/magiskinit。
 
 第二阶段代码执行如下：
 
@@ -276,4 +276,4 @@ void MagiskInit::patch_rw_root() {
 
 
 
-完整的控制流，/magiskinit -> /init 一阶段 -> /data/magiskinit 二阶段 -> /system/bin/init 二阶段。
+完整的控制流，/magiskinit -> /init 一阶段 -> /data/magiskinit 二阶段 -> /system/bin/init 二阶段。可以知道magiskinit 通过劫持init进程，实现root权限 去修改配置、启动root权限服务的功能。
