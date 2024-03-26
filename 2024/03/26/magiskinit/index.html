@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="magiskinit 原理探究测试设备：pixel 7 pro magisk 版本： 27000 从流程上看  安装magisk apk，使用magisk修补init_boot.img 将修补后的init_boot.img 刷入手机 重启手机， 完成root  想要理解为什么，我认为有两个目标：  理解init_boot.img 在android 发挥的作用  被修改后的镜像，做了哪些特殊行为">
+<meta property="og:type" content="article">
+<meta property="og:title" content="magiskinit">
+<meta property="og:url" content="http://example.com/2024/03/26/magiskinit/index.html">
+<meta property="og:site_name" content="巴莱多的博客">
+<meta property="og:description" content="magiskinit 原理探究测试设备：pixel 7 pro magisk 版本： 27000 从流程上看  安装magisk apk，使用magisk修补init_boot.img 将修补后的init_boot.img 刷入手机 重启手机， 完成root  想要理解为什么，我认为有两个目标：  理解init_boot.img 在android 发挥的作用  被修改后的镜像，做了哪些特殊行为">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-03-26T11:33:20.000Z">
+<meta property="article:modified_time" content="2024-03-26T15:47:08.145Z">
+<meta property="article:author" content="Pareto">
+<meta property="article:tag" content="magisk,android">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>magiskinit</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.1.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/doom-man">Projects</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2024/03/19/my-first-post/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2024/03/26/magiskinit/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2024/03/26/magiskinit/&text=magiskinit"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2024/03/26/magiskinit/&title=magiskinit"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2024/03/26/magiskinit/&is_video=false&description=magiskinit"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=magiskinit&body=Check out this article: http://example.com/2024/03/26/magiskinit/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2024/03/26/magiskinit/&title=magiskinit"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2024/03/26/magiskinit/&title=magiskinit"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2024/03/26/magiskinit/&title=magiskinit"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2024/03/26/magiskinit/&title=magiskinit"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2024/03/26/magiskinit/&name=magiskinit&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2024/03/26/magiskinit/&t=magiskinit"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#magiskinit-%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6"><span class="toc-number">1.</span> <span class="toc-text">magiskinit 原理探究</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#magisk-debug%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="toc-number">1.1.</span> <span class="toc-text">magisk debug环境搭建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%90%86%E8%A7%A3init-boot-img-%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="toc-number">1.2.</span> <span class="toc-text">理解init_boot.img 的作用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BF%AE%E8%A1%A5init-boot-img"><span class="toc-number">1.3.</span> <span class="toc-text">修补init_boot.img</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#magiskinit-%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-number">1.4.</span> <span class="toc-text">magiskinit 代码分析</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        magiskinit
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">Pareto</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2024-03-26T11:33:20.000Z" class="dt-published" itemprop="datePublished">2024-03-26</time>
+        
+      
+    </div>
+
+
+      
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/magisk-android/" rel="tag">magisk,android</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="magiskinit-原理探究"><a href="#magiskinit-原理探究" class="headerlink" title="magiskinit 原理探究"></a>magiskinit 原理探究</h1><p>测试设备：pixel 7 pro</p>
+<p>magisk 版本： 27000</p>
+<p>从流程上看</p>
+<ol>
+<li>安装magisk apk，使用magisk修补init_boot.img</li>
+<li>将修补后的init_boot.img 刷入手机</li>
+<li>重启手机， 完成root</li>
+</ol>
+<p>想要理解为什么，我认为有两个目标：</p>
+<ol>
+<li>理解init_boot.img 在android 发挥的作用 </li>
+<li>被修改后的镜像，做了哪些特殊行为</li>
+</ol>
+<h2 id="magisk-debug环境搭建"><a href="#magisk-debug环境搭建" class="headerlink" title="magisk debug环境搭建"></a>magisk debug环境搭建</h2><p>能对magisk init插入一些日志，验证分析。</p>
+<ol>
+<li>官网安装debug版本的magisk 。</li>
+<li>clone magisk 的源码，参考<a target="_blank" rel="noopener" href="https://topjohnwu.github.io/Magisk/build.html">文档</a>，搭建好编译环境</li>
+<li>编译apk ，将编译的apk 重命名为zip 通过magisk刷入到手机，安装成功。</li>
+<li>重启设备，查看magiskinit日志。</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep magiskinit</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[    0.433073] magiskinit: Device config:</span><br><span class="line">[    0.433085] magiskinit: skip_initramfs=[0]</span><br><span class="line">[    0.433092] magiskinit: force_normal_boot=[1]</span><br><span class="line">[    0.433098] magiskinit: rootwait=[0]</span><br><span class="line">[    0.433104] magiskinit: slot=[_a]</span><br><span class="line">[    0.433111] magiskinit: dt_dir=[/proc/device-tree/firmware/android]</span><br><span class="line">[    0.433117] magiskinit: fstab_suffix=[]</span><br><span class="line">[    0.433122] magiskinit: hardware=[cheetah]</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="理解init-boot-img-的作用"><a href="#理解init-boot-img-的作用" class="headerlink" title="理解init_boot.img 的作用"></a>理解init_boot.img 的作用</h2><p><a target="_blank" rel="noopener" href="https://source.android.com/docs/core/architecture/bootloader">“android对bootloader行为的说明”</a>说到 ，bootloader 加载init_boot.img, boot.img 。</p>
+<ol>
+<li>将内核加载内存，并且在内存中执行</li>
+<li>加载ramdisks和bootconfig 到内存创建initramfs</li>
+</ol>
+<p>其中ramdisk 就在init_boot.img ，ramdisk中有init 进程 ，内核启动后，会执行initramfs  根目录的&#x2F;init，进行第一阶段，完成目录挂载、系统环境的搭建后，切换根目录到&#x2F;system , 执行&#x2F;system&#x2F;bin&#x2F;init 开始第二阶段，初始化用户态环境 ，继续启动系统。init的这个过程就是2SI。</p>
+<p>这里理解init_boot.img 提供initramfs 环境 、init程序。</p>
+<h2 id="修补init-boot-img"><a href="#修补init-boot-img" class="headerlink" title="修补init_boot.img"></a>修补init_boot.img</h2><p>分析源码，修补镜像功能所在代码com&#x2F;topjohnwu&#x2F;magisk&#x2F;core&#x2F;tasks&#x2F;MagiskInstaller.kt &gt; MagiskInstallImpl。</p>
+<p>核心功能<strong>patchBoot</strong>：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> cmds = arrayOf(</span><br><span class="line">    <span class="string">&quot;cd <span class="variable">$installDir</span>&quot;</span>,</span><br><span class="line">    <span class="string">&quot;KEEPFORCEENCRYPT=<span class="subst">$&#123;Config.keepEnc&#125;</span> &quot;</span> +</span><br><span class="line">    <span class="string">&quot;KEEPVERITY=<span class="subst">$&#123;Config.keepVerity&#125;</span> &quot;</span> +</span><br><span class="line">    <span class="string">&quot;PATCHVBMETAFLAG=<span class="subst">$&#123;Info.patchBootVbmeta&#125;</span> &quot;</span> +</span><br><span class="line">    <span class="string">&quot;RECOVERYMODE=<span class="subst">$&#123;Config.recovery&#125;</span> &quot;</span> +</span><br><span class="line">    <span class="string">&quot;LEGACYSAR=<span class="subst">$&#123;Info.legacySAR&#125;</span> &quot;</span> +</span><br><span class="line">    <span class="string">&quot;sh boot_patch.sh <span class="variable">$srcBoot</span>&quot;</span>)</span><br><span class="line"><span class="keyword">val</span> isSuccess = cmds.sh().isSuccess</span><br></pre></td></tr></table></figure>
+
+<p>准备一些环境变量，用boot_patch.sh 去patch init_boot.img，</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">./magiskboot cpio ramdisk.cpio \</span><br><span class="line"><span class="string">&quot;add 0750 <span class="variable">$INIT</span> magiskinit&quot;</span> \  <span class="comment"># magiskinit 作为init</span></span><br><span class="line"><span class="string">&quot;mkdir 0750 overlay.d&quot;</span> \ <span class="comment"># 创建overlay.d目录</span></span><br><span class="line"><span class="string">&quot;mkdir 0750 overlay.d/sbin&quot;</span> \ <span class="comment"># 创建overlay.d/sbin目录</span></span><br><span class="line"><span class="string">&quot;<span class="variable">$SKIP32</span> add 0644 overlay.d/sbin/magisk32.xz magisk32.xz&quot;</span> \ <span class="comment"># magisk32.xz 放到 overlay.d/sbin/magisk32.xz</span></span><br><span class="line"><span class="string">&quot;<span class="variable">$SKIP64</span> add 0644 overlay.d/sbin/magisk64.xz magisk64.xz&quot;</span> \ <span class="comment"># 同上，但64位</span></span><br><span class="line"><span class="string">&quot;add 0644 overlay.d/sbin/stub.xz stub.xz&quot;</span> \ <span class="comment">#同上,但stub.xz</span></span><br><span class="line"><span class="string">&quot;patch&quot;</span> \ <span class="comment"># 执行patch</span></span><br><span class="line"><span class="string">&quot;<span class="variable">$SKIP_BACKUP</span> backup ramdisk.cpio.orig&quot;</span> \ <span class="comment"># 放入备份ramdisk.cpio</span></span><br><span class="line"><span class="string">&quot;mkdir 000 .backup&quot;</span> \ <span class="comment"># 创建.backup目录</span></span><br><span class="line"><span class="string">&quot;add 000 .backup/.magisk config&quot;</span> \ <span class="comment"># 放入config到.backup</span></span><br><span class="line">|| abort <span class="string">&quot;! Unable to patch ramdisk&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>将patch后的ramdisk 和原始文件对比，前者多了.overlay.d&#x2F;sbin&#x2F;magisk*.xz 和.overlay.d&#x2F;sbin&#x2F;stub.xz ; 并且init 文件不同；此时init 为magiskinit进程。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#解压命令 </span><br><span class="line">cpio -i -d &lt; ramdisk.cpio</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="magiskinit-代码分析"><a href="#magiskinit-代码分析" class="headerlink" title="magiskinit 代码分析"></a>magiskinit 代码分析</h2><p>已经搭建好了magisk debug环境，直接看看日志，magisk做了什么。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">[    0.433073] magiskinit: Device config:</span><br><span class="line">[    0.433085] magiskinit: skip_initramfs=[0]</span><br><span class="line">[    0.433092] magiskinit: force_normal_boot=[1]</span><br><span class="line">[    0.433098] magiskinit: rootwait=[0]</span><br><span class="line">[    0.433104] magiskinit: slot=[_a]</span><br><span class="line">[    0.433111] magiskinit: dt_dir=[/proc/device-tree/firmware/android]</span><br><span class="line">[    0.433117] magiskinit: fstab_suffix=[]</span><br><span class="line">[    0.433122] magiskinit: hardware=[cheetah]</span><br><span class="line">[    0.433128] magiskinit: hardware.platform=[gs201]</span><br><span class="line">[    0.433132] magiskinit: emulator=[0]</span><br><span class="line">[    0.433140] magiskinit: FirstStageInit</span><br><span class="line">[    0.433145] magiskinit: Setup data tmp</span><br><span class="line">[    0.434591] magiskinit: unxz /.backup/init.xz -&gt; /.backup/init   ?? hah  不知到啥时候还存了个init.xz</span><br><span class="line">[    0.614553] magiskinit: Patch @ 0000F39F [/system/bin/init] -&gt; [/data/magiskinit]</span><br><span class="line">[    0.614831] magiskinit: Unmount [/sys]</span><br><span class="line">[    0.614916] magiskinit: Unmount [/proc] </span><br><span class="line">[    1.523679] magiskinit: SecondStageInit</span><br><span class="line">[    1.523791] magiskinit: Setup Magisk tmp at /debug_ramdisk</span><br><span class="line">[    1.527170] magiskinit: Setup persist: [sda1] (8, 1)</span><br><span class="line">[    1.530972] magiskinit: preinit: .magisk/mirror/preinit/magisk</span><br><span class="line">[    1.534912] magiskinit: Patching init.rc in /system/etc/init/hw</span><br><span class="line">[    1.535883] magiskinit: Inject magisk rc</span><br><span class="line">[    1.535951] magiskinit: Patching init.zygote64.rc in /system/etc/init/hw</span><br><span class="line">[    1.536340] magiskinit: Inject zygote restart</span><br><span class="line">[    1.536385] magiskinit: Patching init.zygote64_32.rc in /system/etc/init/hw</span><br><span class="line">[    1.536617] magiskinit: Inject zygote restart</span><br><span class="line">[    1.536649] magiskinit: Patching init.zygote32.rc in /system/etc/init/hw</span><br><span class="line">[    1.536867] magiskinit: Inject zygote restart</span><br><span class="line">[    1.552893] magiskinit: Hijack [/sys/fs/selinux/load]</span><br><span class="line">[    1.552912] magiskinit: Hijack [/sys/fs/selinux/enforce]</span><br><span class="line">[    1.553672] magiskinit: Mount [.magisk/rootdir/system/etc/init/hw/init.zygote32.rc] -&gt; [/system/etc/init/hw/init.zygote32.rc]</span><br><span class="line">[    1.553707] magiskinit: Mount [.magisk/rootdir/system/etc/init/hw/init.zygote64_32.rc] -&gt; [/system/etc/init/hw/init.zygote64_32.rc]</span><br><span class="line">[    1.553721] magiskinit: Mount [.magisk/rootdir/system/etc/init/hw/init.zygote64.rc] -&gt; [/system/etc/init/hw/init.zygote64.rc]</span><br><span class="line">[    1.553741] magiskinit: Mount [.magisk/rootdir/system/etc/init/hw/init.rc] -&gt; [/system/etc/init/hw/init.rc]</span><br><span class="line">[    1.554586] magiskinit: Unmount [/data]</span><br><span class="line">[    1.637197] magiskinit: Load policy from: .magisk/selinux/load</span><br></pre></td></tr></table></figure>
+
+<p>结合代码分析：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">FirstStageInit</span> : <span class="keyword">public</span> BaseInit &#123;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">prepare</span><span class="params">()</span></span>;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">FirstStageInit</span>(<span class="type">char</span> *argv[], BootConfig *config) : <span class="built_in">BaseInit</span>(argv, config) &#123;</span><br><span class="line">        <span class="built_in">LOGD</span>(<span class="string">&quot;%s\n&quot;</span>, __FUNCTION__);</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">start</span><span class="params">()</span> <span class="keyword">override</span> </span>&#123;</span><br><span class="line">        <span class="built_in">prepare</span>();</span><br><span class="line">        <span class="built_in">exec_init</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">FirstStageInit::prepare</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">prepare_data</span>();<span class="comment">//复制init到/data/magiskinit</span></span><br><span class="line">    <span class="built_in">restore_ramdisk_init</span>(); <span class="comment">//还原/init</span></span><br><span class="line">    <span class="keyword">auto</span> init = <span class="built_in">mmap_data</span>(<span class="string">&quot;/init&quot;</span>, <span class="literal">true</span>);</span><br><span class="line">    <span class="comment">// Redirect original init to magiskinit</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">size_t</span> off : init.<span class="built_in">patch</span>(INIT_PATH, REDIR_PATH)) &#123; <span class="comment">/// 修改system/bin/init为 /data/magiskinit</span></span><br><span class="line">        <span class="built_in">LOGD</span>(<span class="string">&quot;Patch @ %08zX [&quot;</span> INIT_PATH <span class="string">&quot;] -&gt; [&quot;</span> REDIR_PATH <span class="string">&quot;]\n&quot;</span>, off);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">BaseInit::exec_init</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Unmount in reverse order</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span> &amp;p : reversed) &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">xumount2</span>(p.<span class="built_in">data</span>(), MNT_DETACH) == <span class="number">0</span>)</span><br><span class="line">            <span class="built_in">LOGD</span>(<span class="string">&quot;Unmount [%s]\n&quot;</span>, p.<span class="built_in">data</span>());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">execv</span>(<span class="string">&quot;/init&quot;</span>, argv);</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>prepare将当前&#x2F;init 复制到&#x2F;data&#x2F;magiskinit ，还原&#x2F;init为原init 。然后重定位&#x2F;system&#x2F;bin&#x2F;init 为&#x2F;data&#x2F;magiskinit ，修改&#x2F;init程序中 &#x2F;system&#x2F;bin&#x2F;init 字符串为&#x2F;data&#x2F;magiskinit。</p>
+<p>第二阶段代码执行如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">SecondStageInit</span> : <span class="keyword">public</span> MagiskInit &#123;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="function"><span class="type">bool</span> <span class="title">prepare</span><span class="params">()</span></span>;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">SecondStageInit</span>(<span class="type">char</span> *argv[]) : <span class="built_in">MagiskInit</span>(argv) &#123;</span><br><span class="line">        <span class="built_in">LOGD</span>(<span class="string">&quot;%s\n&quot;</span>, __FUNCTION__);</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">start</span><span class="params">()</span> <span class="keyword">override</span> </span>&#123;</span><br><span class="line">        <span class="type">bool</span> is_rootfs = <span class="built_in">prepare</span>();</span><br><span class="line">        <span class="keyword">if</span> (is_rootfs)</span><br><span class="line">            <span class="built_in">patch_rw_root</span>();</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            <span class="built_in">patch_ro_root</span>();</span><br><span class="line">        <span class="built_in">exec_init</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">SecondStageInit::prepare</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">umount2</span>(<span class="string">&quot;/init&quot;</span>, MNT_DETACH);</span><br><span class="line">    <span class="built_in">unlink</span>(<span class="string">&quot;/data/init&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Make sure init dmesg logs won&#x27;t get messed up</span></span><br><span class="line">    argv[<span class="number">0</span>] = (<span class="type">char</span> *) INIT_PATH;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Some weird devices like meizu, uses 2SI but still have legacy rootfs</span></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">statfs</span> sfs&#123;&#125;;</span><br><span class="line">    <span class="built_in">statfs</span>(<span class="string">&quot;/&quot;</span>, &amp;sfs);</span><br><span class="line">    <span class="keyword">if</span> (sfs.f_type == RAMFS_MAGIC || sfs.f_type == TMPFS_MAGIC) &#123;</span><br><span class="line">        <span class="comment">// We are still on rootfs, so make sure we will execute the init of the 2nd stage</span></span><br><span class="line">        <span class="built_in">unlink</span>(<span class="string">&quot;/init&quot;</span>);</span><br><span class="line">        <span class="built_in">xsymlink</span>(INIT_PATH, <span class="string">&quot;/init&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">MagiskInit::patch_rw_root</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    mount_list.<span class="built_in">emplace_back</span>(<span class="string">&quot;/data&quot;</span>);</span><br><span class="line">    <span class="built_in">parse_config_file</span>();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Create hardlink mirror of /sbin to /root</span></span><br><span class="line">    <span class="built_in">mkdir</span>(<span class="string">&quot;/root&quot;</span>, <span class="number">0777</span>);</span><br><span class="line">    <span class="built_in">clone_attr</span>(<span class="string">&quot;/sbin&quot;</span>, <span class="string">&quot;/root&quot;</span>);</span><br><span class="line">    <span class="built_in">link_path</span>(<span class="string">&quot;/sbin&quot;</span>, <span class="string">&quot;/root&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Handle overlays</span></span><br><span class="line">    <span class="built_in">load_overlay_rc</span>(<span class="string">&quot;/overlay.d&quot;</span>);</span><br><span class="line">    <span class="built_in">mv_path</span>(<span class="string">&quot;/overlay.d&quot;</span>, <span class="string">&quot;/&quot;</span>);</span><br><span class="line">    <span class="built_in">rm_rf</span>(<span class="string">&quot;/data/overlay.d&quot;</span>);</span><br><span class="line">    <span class="built_in">rm_rf</span>(<span class="string">&quot;/.backup&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Patch init.rc</span></span><br><span class="line">    <span class="built_in">patch_rc_scripts</span>(<span class="string">&quot;/&quot;</span>, <span class="string">&quot;/sbin&quot;</span>, <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">    <span class="type">bool</span> treble;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">auto</span> init = <span class="built_in">mmap_data</span>(<span class="string">&quot;/init&quot;</span>);</span><br><span class="line">        treble = init.<span class="built_in">contains</span>(SPLIT_PLAT_CIL);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">xmkdir</span>(PRE_TMPSRC, <span class="number">0</span>);</span><br><span class="line">    <span class="built_in">xmount</span>(<span class="string">&quot;tmpfs&quot;</span>, PRE_TMPSRC, <span class="string">&quot;tmpfs&quot;</span>, <span class="number">0</span>, <span class="string">&quot;mode=755&quot;</span>);</span><br><span class="line">    <span class="built_in">xmkdir</span>(PRE_TMPDIR, <span class="number">0</span>);</span><br><span class="line">    <span class="built_in">setup_tmp</span>(PRE_TMPDIR);</span><br><span class="line">    <span class="built_in">chdir</span>(PRE_TMPDIR);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Extract magisk</span></span><br><span class="line">    <span class="built_in">extract_files</span>(<span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((!treble &amp;&amp; <span class="built_in">access</span>(<span class="string">&quot;/sepolicy&quot;</span>, F_OK) == <span class="number">0</span>) || !<span class="built_in">hijack_sepolicy</span>()) &#123;</span><br><span class="line">        <span class="built_in">patch_sepolicy</span>(<span class="string">&quot;/sepolicy&quot;</span>, <span class="string">&quot;/sepolicy&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">chdir</span>(<span class="string">&quot;/&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Dump magiskinit as magisk</span></span><br><span class="line">    <span class="built_in">cp_afc</span>(REDIR_PATH, <span class="string">&quot;/sbin/magisk&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>创建&#x2F;debug_ramdisk 存放文件magisk 相关文件并且patch init.rc  , patch sepolicy  ， 执行&#x2F;system&#x2F;bin&#x2F;init 。</p>
+<p>完整的控制流，&#x2F;magiskinit -&gt; &#x2F;init 一阶段 -&gt; &#x2F;data&#x2F;magiskinit 二阶段 -&gt; &#x2F;system&#x2F;bin&#x2F;init 二阶段。可以知道magiskinit 通过劫持init进程，实现root权限 去修改配置、启动root权限服务的功能。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="http://github.com/doom-man">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#magiskinit-%E5%8E%9F%E7%90%86%E6%8E%A2%E7%A9%B6"><span class="toc-number">1.</span> <span class="toc-text">magiskinit 原理探究</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#magisk-debug%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="toc-number">1.1.</span> <span class="toc-text">magisk debug环境搭建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%90%86%E8%A7%A3init-boot-img-%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="toc-number">1.2.</span> <span class="toc-text">理解init_boot.img 的作用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BF%AE%E8%A1%A5init-boot-img"><span class="toc-number">1.3.</span> <span class="toc-text">修补init_boot.img</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#magiskinit-%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-number">1.4.</span> <span class="toc-text">magiskinit 代码分析</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2024/03/26/magiskinit/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2024/03/26/magiskinit/&text=magiskinit"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2024/03/26/magiskinit/&title=magiskinit"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2024/03/26/magiskinit/&is_video=false&description=magiskinit"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=magiskinit&body=Check out this article: http://example.com/2024/03/26/magiskinit/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2024/03/26/magiskinit/&title=magiskinit"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2024/03/26/magiskinit/&title=magiskinit"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2024/03/26/magiskinit/&title=magiskinit"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2024/03/26/magiskinit/&title=magiskinit"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2024/03/26/magiskinit/&name=magiskinit&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2024/03/26/magiskinit/&t=magiskinit"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2024
+    Pareto
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/doom-man">Projects</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
