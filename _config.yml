@@ -104,4 +104,4 @@ theme: cactus
 deploy:
   type: git
   repo: https://github.com/doom-man/doom-man.github.io
-  branch: main
+  branch: hexo
